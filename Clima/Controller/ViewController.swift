@@ -76,6 +76,7 @@ class ViewController: UIViewController {
     lazy var weatherImageView: UIImageView = {
         let image = UIImageView(frame: CGRect(x: 0, y: 0, width: 120, height: 120))
         image.image = UIImage(systemName: "sun.max")
+        image.tintColor = .black
         return image
     }()
     
@@ -89,7 +90,8 @@ class ViewController: UIViewController {
     
     lazy var locationButton: UIButton = {
         let button = UIButton(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        button.setBackgroundImage( UIImage(systemName: "location.circle.fill")?.withTintColor(.systemBrown) , for: .normal)
+        button.setBackgroundImage( UIImage(systemName: "location.circle.fill"), for: .normal)
+        button.tintColor = .black
         button.addTarget(self, action: #selector(locationButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -97,6 +99,7 @@ class ViewController: UIViewController {
     lazy var searchButton: UIButton = {
         let button = UIButton(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
         button.setBackgroundImage(UIImage(systemName: "magnifyingglass"), for: .normal)
+        button.tintColor = .black
         button.addTarget(self, action: #selector(searchButtonTapped), for: .touchUpInside)
         return button
     }()
