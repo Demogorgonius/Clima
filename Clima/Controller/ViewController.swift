@@ -67,6 +67,7 @@ class ViewController: UIViewController {
     
     lazy var backgroundImageView: UIImageView = {
         let image = UIImageView(frame: CGRect(x: 0, y: 0, width: 300, height: 600))
+        image.contentMode = .scaleAspectFill
         image.image = #imageLiteral(resourceName: "background")
         image.addSubview(verticalStackView)
         return image
@@ -88,7 +89,7 @@ class ViewController: UIViewController {
     
     lazy var locationButton: UIButton = {
         let button = UIButton(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
-        button.setBackgroundImage( UIImage(systemName: "location.circle.fill") , for: .normal)
+        button.setBackgroundImage( UIImage(systemName: "location.circle.fill")?.withTintColor(.systemBrown) , for: .normal)
         button.addTarget(self, action: #selector(locationButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -147,7 +148,7 @@ class ViewController: UIViewController {
         text.placeholder = "Enter town"
         text.borderStyle = .line
         text.textAlignment = .right
-        text.backgroundColor = .gray
+        text.backgroundColor = .clear
         return text
     }()
     
@@ -158,12 +159,54 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         
         view.addSubview(backgroundImageView)
-        
+        setupConstraints()
     }
     
     
     //MARK: - Setup Constraints
     
+    func setupConstraints() {
+        backgroundImageView.snp.makeConstraints { make in
+            make.top.equalToSuperview()
+            make.bottom.equalToSuperview()
+            make.leading.equalToSuperview()
+            make.trailing.equalToSuperview()
+        }
+        
+        verticalStackView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(50)
+            make.leading.equalToSuperview()
+            make.trailing.equalToSuperview().offset(-10)
+        }
+        
+        horizontalSearchStackView.snp.makeConstraints { make in
+            make.top.equalTo(verticalStackView.snp.top)
+            make.leading.equalTo(verticalStackView.snp.leading).offset(10)
+            make.trailing.equalTo(verticalStackView.snp.trailing)
+            make.height.equalTo(40)
+        }
+        
+        townTextField.snp.makeConstraints { make in
+            make.width.equalTo(274)
+            make.height.equalTo(40)
+        }
+        
+        locationButton.snp.makeConstraints { make in
+            make.height.equalTo(40)
+            make.width.equalTo(40)
+        }
+        
+        searchButton.snp.makeConstraints { make in
+            make.height.equalTo(40)
+            make.width.equalTo(40)
+        }
+        
+        weatherImageView.snp.makeConstraints { make in
+            make.height.equalTo(120)
+            make.width.equalTo(120)
+        }
+        
+    }
     
     //MARK: - Methods
 
