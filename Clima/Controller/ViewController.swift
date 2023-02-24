@@ -7,12 +7,15 @@
 
 import UIKit
 import SnapKit
+import CoreLocation
 
 
 class ViewController: UIViewController {
     
     //MARK: - Variables
     
+    var weatherManager = WeatherManager()
+    var locationManager = CLLocationManager()
     
     
     //MARK: - UIStackView and Views
@@ -25,10 +28,10 @@ class ViewController: UIViewController {
         stack.contentMode = .scaleToFill
         stack.distribution = .fill
         [horizontalSearchStackView,
-        weatherImageView,
-        horizontalConditionStackView,
-        townNameLabel,
-        putterView].forEach {
+         weatherImageView,
+         horizontalConditionStackView,
+         townNameLabel,
+         putterView].forEach {
             stack.addArrangedSubview($0)
         }
         return stack
@@ -42,8 +45,8 @@ class ViewController: UIViewController {
         stack.contentMode = .scaleToFill
         stack.distribution = .fill
         [locationButton,
-        townTextField,
-        searchButton].forEach {
+         townTextField,
+         searchButton].forEach {
             stack.addArrangedSubview($0)
         }
         return stack
@@ -57,8 +60,8 @@ class ViewController: UIViewController {
         stack.contentMode = .scaleToFill
         stack.distribution = .fill
         [degreesLabel,
-        signDegreesLabel,
-        cDegreesLabel].forEach {
+         signDegreesLabel,
+         cDegreesLabel].forEach {
             stack.addArrangedSubview($0)
         }
         return stack
@@ -69,14 +72,14 @@ class ViewController: UIViewController {
         let image = UIImageView(frame: CGRect(x: 0, y: 0, width: 300, height: 600))
         image.contentMode = .scaleAspectFill
         image.image = #imageLiteral(resourceName: "background")
-        image.addSubview(verticalStackView)
+        //        image.addSubview(verticalStackView)
         return image
     }()
     
     lazy var weatherImageView: UIImageView = {
         let image = UIImageView(frame: CGRect(x: 0, y: 0, width: 120, height: 120))
         image.image = UIImage(systemName: "sun.max")
-        image.tintColor = .black
+        image.tintColor = .label
         return image
     }()
     
@@ -91,7 +94,7 @@ class ViewController: UIViewController {
     lazy var locationButton: UIButton = {
         let button = UIButton(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
         button.setBackgroundImage( UIImage(systemName: "location.circle.fill"), for: .normal)
-        button.tintColor = .black
+        button.tintColor = .label
         button.addTarget(self, action: #selector(locationButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -99,7 +102,7 @@ class ViewController: UIViewController {
     lazy var searchButton: UIButton = {
         let button = UIButton(frame: CGRect(x: 0, y: 0, width: 40, height: 40))
         button.setBackgroundImage(UIImage(systemName: "magnifyingglass"), for: .normal)
-        button.tintColor = .black
+        button.tintColor = .label
         button.addTarget(self, action: #selector(searchButtonTapped), for: .touchUpInside)
         return button
     }()
@@ -110,7 +113,7 @@ class ViewController: UIViewController {
         let label = UILabel(frame: CGRect(x: 0, y: 0, width: 179, height: 33))
         label.text = "Moscow"
         label.font = UIFont.systemFont(ofSize: 30, weight: .regular)
-        label.textColor = .black
+        label.textColor = .label
         label.textAlignment = .right
         return label
     }()
@@ -119,7 +122,7 @@ class ViewController: UIViewController {
         let label = UILabel(frame: CGRect(x: 0, y: 0, width: 67, height: 119.5))
         label.text = "C"
         label.font = UIFont.systemFont(ofSize: 100, weight: .light)
-        label.textColor = .black
+        label.textColor = .label
         label.textAlignment = .center
         return label
     }()
@@ -128,7 +131,7 @@ class ViewController: UIViewController {
         let label = UILabel(frame: CGRect(x: 0, y: 0, width: 38, height: 119.5))
         label.text = "°"
         label.font = UIFont.systemFont(ofSize: 100, weight: .light)
-        label.textColor = .black
+        label.textColor = .label
         label.textAlignment = .center
         return label
     }()
@@ -137,7 +140,7 @@ class ViewController: UIViewController {
         let label = UILabel(frame: CGRect(x: 0, y: 0, width: 93, height: 119.5))
         label.text = "21"
         label.font = UIFont.systemFont(ofSize: 80, weight: .black)
-        label.textColor = .black
+        label.textColor = .label
         label.textAlignment = .center
         return label
     }()
@@ -147,22 +150,35 @@ class ViewController: UIViewController {
     lazy var townTextField: UITextField = {
         let text = UITextField(frame: CGRect(x: 0, y: 0, width: 274, height: 40))
         text.font = UIFont.systemFont(ofSize: 25.0, weight: .regular)
-        text.textColor = .black
+        text.textColor = .label
         text.placeholder = "Enter town"
         text.borderStyle = .line
         text.textAlignment = .right
         text.backgroundColor = .clear
+        text.returnKeyType = .go
+        text.autocapitalizationType = .words
+        text.isUserInteractionEnabled = true
         return text
     }()
     
     
     //MARK: - ViewDidLoad
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        
+        
         view.addSubview(backgroundImageView)
+        view.addSubview(verticalStackView)
         setupConstraints()
+        locationManager.delegate = self
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.requestLocation()
+        townTextField.delegate = self
+        weatherManager.delegate = self
+        
+        
     }
     
     
@@ -180,6 +196,7 @@ class ViewController: UIViewController {
             make.top.equalToSuperview().offset(50)
             make.leading.equalToSuperview()
             make.trailing.equalToSuperview().offset(-10)
+            make.height.equalTo(355.67)
         }
         
         horizontalSearchStackView.snp.makeConstraints { make in
@@ -212,17 +229,101 @@ class ViewController: UIViewController {
     }
     
     //MARK: - Methods
-
+    
     @objc func locationButtonTapped(_ sender: UIButton) {
+        
+        locationManager.requestLocation()
         
     }
     
     
     @objc func searchButtonTapped(_ sender: UIButton) {
         
+        townTextField.endEditing(true)
+        if let cityName = townTextField.text {
+            
+            weatherManager.fetchWeather(cityName: cityName)
+            
+        }
         
     }
     
+    
+}
 
+//MARK: - UITextField extension
+
+extension ViewController: UITextFieldDelegate {
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        
+        townTextField.endEditing(true)
+        
+        
+        return true
+        
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        
+        if let cityName = townTextField.text {
+            weatherManager.fetchWeather(cityName: cityName)
+        }
+        townTextField.text = ""
+    }
+    
+    func textFieldShouldEndEditing(_ textField: UITextField) -> Bool {
+        if townTextField.text != "" {
+            return true
+        } else {
+            townTextField.placeholder = "Input town name!"
+            return false
+        }
+    }
+    
+}
+
+//MARK: - Weather manager delegate
+
+extension ViewController: WeatherManagerDelegate {
+    
+    func didUpdateWeather(_ weatherManager: WeatherManager, weather: WeatherModel) {
+        
+        degreesLabel.text = weather.temperatureString
+        weatherImageView.image = UIImage(systemName: weather.conditionName)
+        townNameLabel.text = weather.cityName
+        
+    }
+    
+    func didFailWithError(error: Error) {
+        
+        let alert = UIAlertController(title: "Ошибка", message: error.localizedDescription, preferredStyle: .alert)
+        let cancelAction = UIAlertAction(title: "OK", style: .default) { alertAction in
+            return
+        }
+        
+        alert.addAction(cancelAction)
+        present(alert, animated: true)
+    }
+    
+}
+
+//MARK: - CLLocationManagerDelegate
+
+extension ViewController: CLLocationManagerDelegate {
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last {
+            locationManager.stopUpdatingLocation()
+            let lat = location.coordinate.latitude
+            let lon = location.coordinate.longitude
+            weatherManager.fetchWeather(latitude: lat, longitude: lon)
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print(error.localizedDescription)
+    }
+    
 }
 
